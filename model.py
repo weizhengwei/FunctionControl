@@ -32,19 +32,56 @@ def add_function(data):
 def get_all_license():
 	return db.select('tb_license_module', order='id')
 
+def generate_license():
+	license = ''
+	s = ''.join(random.choice(seed) for i in range(16))
+	for i in range(4):
+		k = i*4
+		if i < 3:
+			tmp = s[k:k+4] + '-'
+		else:
+			tmp = s[k:k+4]
+		license = license + tmp
+	return license
+
 def add_license(data):
-	data_json = json.loads(data)
+	data_json = json.loads(data, encoding="utf-8")
 	funcs = data_json.get('functions')
 	amount = data_json.get('amount')
+	json_funcs = json.dumps(funcs, ensure_ascii = False)
+
+	create_time = datetime.datetime.now()
 	for i in range(amount):
-		license = ''.join(random.choice(seed) for i in range(16))
-		db.insert('tb_license_module', license_number=license, functions=funcs,
-		create_time=datetime.datetime.utcnow(), expiration_time=datetime.datetime.utcnow())
+		license = generate_license()
+		db.insert('tb_license_module', license_number=license, functions=json_funcs,
+		create_time=create_time, expiration_time=create_time+30*24*60*60)
 
 
 
+def verify_license(data):
+	data_json = json.loads(data)
+	license = data_json.get('license')
+	sn = data_json.get('sn')
+	return real_verify_license(license, sn)
 
+def real_verify_license(license, sn):
+	print license
+	print sn
+	if license == None or sn == None:
+		return 'please add ?license=xxx&sn=xxx'
+	license_finded = db.select('tb_license_module', where='license_number=$license', vars=locals())
+	if len(license_finded) == 0:
+		return 'can not find the license, your license is error'
+	
+	if license_finded[0].license_state == 1:
+		return 'the license has been used'
 
+	db.update('tb_license_module', where='license_number=$license', sn=sn, verified=True, 
+		license_state=1, verify_time=datetime.datetime.now(), vars=locals())
+	functions = license_finded[0].get('functions')
+	print functions
+	print type(functions)
+	return 'verify ok'
 
 
 def test():

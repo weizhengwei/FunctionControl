@@ -7,6 +7,7 @@ urls = (
 	'/','index',
 	'/api/function','function_module',
 	'/api/license','license_module',
+	'/api/config', 'config_module',
 	'/api/verify', 'verify_module'
 	)
 
@@ -61,11 +62,24 @@ class license_module:
 			model.add_license(data)
 		return 'add license ok'
 
+class config_module:
+	def GET(self):
+		pass
+	def POST(self):
+		pass
+
 class verify_module:
-	def GET():
-		pass
-	def POST():
-		pass
+	def GET(self):
+		get_input = web.input(_method='get')
+		print get_input
+		return model.real_verify_license(get_input.get('license'), get_input.get('sn'))
+
+	def POST(self):
+		data = web.data()
+		print data
+		if data == None:
+			return 'the data you post is None,can not verify'
+		return model.verify_license(data)
 
 if __name__ == '__main__':
 	app.run()
