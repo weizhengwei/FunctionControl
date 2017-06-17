@@ -2,6 +2,8 @@
 import web
 import json
 import model
+import logging
+logger = logging.getLogger(__name__)
 
 urls = (
 	'/','index',
@@ -14,9 +16,26 @@ urls = (
 app = web.application(urls, globals())
 render = web.template.render('templates/')
 
+
+def get_logger(name=None):
+    default = "__app__"
+    formatter = logging.Formatter('%(levelname)s: %(asctime)s %(funcName)s(%(lineno)d) -- %(message)s',
+                              datefmt='%Y-%m-%d %H:%M:%S')
+    log_map = {"__app__": "app.log", "__basic_log__": "file1.log", "__advance_log__": "file2.log"}
+    if name:
+        logger = logging.getLogger(name)
+    else:
+        logger = logging.getLogger(default)
+    fh = logging.FileHandler(log_map[name])
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+    logger.setLevel(logging.DEBUG)
+    return logger
+
 class index:
 	def GET(self):
 		#return 'all function control'
+		get_logger('__app__').debug('index GET')
 		return render.index()
 
 class function_module:
@@ -34,7 +53,7 @@ class function_module:
 
 	def POST(self):
 		data = web.data()
-		print data
+		get_logger('__app__').debug('function_module POST' + data)
 		if data != None:
 			model.add_function(data)
 		return 'add function ok'
@@ -47,17 +66,17 @@ class license_module:
 		for item in data:
 			ret_item['license_number'] = item.get('license_number')
 			ret_item['functions'] = item.get('functions')
-			ret_item['license_state'] = item.get('license_state'),
-			ret_item['sn'] = item.get('sn'),
-			ret_item['verify_time'] = item.get('verify_time'),
-			ret_item['verified'] = item.get('verified'),
+			ret_item['license_state'] = item.get('license_state')
+			ret_item['sn'] = item.get('sn')
+			ret_item['verify_time'] = item.get('verify_time') and item.get('verify_time').strftime( '%y-%m-%d %I:%M:%S') or item.get('verify_time')
+			ret_item['verified'] = item.get('verified')
 			ret_item['create_time'] = item.get('create_time').strftime( '%y-%m-%d %I:%M:%S')
 			ret.append(ret_item)
 		return json.dumps(ret, ensure_ascii=False)
 
 	def POST(self):
 		data = web.data()
-		print data
+		get_logger('__app__').debug('license_module POST' + data)
 		if data != None:
 			model.add_license(data)
 		return 'add license ok'
@@ -76,7 +95,7 @@ class verify_module:
 
 	def POST(self):
 		data = web.data()
-		print data
+		get_logger('__app__').debug('verify_module POST' + data)
 		if data == None:
 			return 'the data you post is None,can not verify'
 		return model.verify_license(data)

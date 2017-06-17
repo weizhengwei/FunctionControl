@@ -89,7 +89,7 @@ def update_post(id, title, content):
 1./api/function
 GET 获取所有测试和非测试功能项
 POST 添加功能功能项
-curl -d "@addfunction.json" localhost:9090/api/license
+curl -d "@addfunction.json" localhost:9090/api/function
 
 2./api/license
 GET 获取所有license
